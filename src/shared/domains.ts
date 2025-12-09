@@ -10,6 +10,7 @@ export enum Domain {
   ADVANCED_SECURITY = "advanced-security",
   PIPELINES = "pipelines",
   CORE = "core",
+  EXTENSION_DATA = "extension-data",
   REPOSITORIES = "repositories",
   SEARCH = "search",
   TEST_PLANS = "test-plans",

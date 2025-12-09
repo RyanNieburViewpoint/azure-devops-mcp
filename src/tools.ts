@@ -8,6 +8,7 @@ import { Domain } from "./shared/domains.js";
 import { configureAdvSecTools } from "./tools/advanced-security.js";
 import { configurePipelineTools } from "./tools/pipelines.js";
 import { configureCoreTools } from "./tools/core.js";
+import { configureExtensionDataTools } from "./tools/extension-data.js";
 import { configureRepoTools } from "./tools/repositories.js";
 import { configureSearchTools } from "./tools/search.js";
 import { configureTestPlanTools } from "./tools/test-plans.js";
@@ -23,6 +24,7 @@ function configureAllTools(server: McpServer, tokenProvider: () => Promise<strin
   };
 
   configureIfDomainEnabled(Domain.CORE, () => configureCoreTools(server, tokenProvider, connectionProvider, userAgentProvider));
+  configureIfDomainEnabled(Domain.EXTENSION_DATA, () => configureExtensionDataTools(server, tokenProvider, userAgentProvider));
   configureIfDomainEnabled(Domain.WORK, () => configureWorkTools(server, tokenProvider, connectionProvider));
   configureIfDomainEnabled(Domain.PIPELINES, () => configurePipelineTools(server, tokenProvider, connectionProvider, userAgentProvider));
   configureIfDomainEnabled(Domain.REPOSITORIES, () => configureRepoTools(server, tokenProvider, connectionProvider, userAgentProvider));
