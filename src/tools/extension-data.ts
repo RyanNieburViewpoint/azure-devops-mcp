@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { WebApi } from "azure-devops-node-api";
 import { z } from "zod";
 
 const EXTENSION_DATA_TOOLS = {
@@ -15,7 +16,7 @@ const EXTENSION_DATA_TOOLS = {
 
 const ScopeTypeSchema = z.enum(["Default", "User"]).describe("Scope type for the data. 'Default' is project collection scope, 'User' is user-specific scope.");
 
-function configureExtensionDataTools(server: McpServer, tokenProvider: () => Promise<string>, userAgentProvider: () => string) {
+function configureExtensionDataTools(server: McpServer, tokenProvider: () => Promise<string>, connectionProvider: () => Promise<WebApi>) {
   server.tool(
     EXTENSION_DATA_TOOLS.get_document,
     "Get a document from an extension's data collection by ID. Documents are JSON objects with special 'id' and '__etag' properties for versioning.",
@@ -29,37 +30,14 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
     },
     async ({ publisherName, extensionName, collectionName, documentId, scopeType, scopeValue }) => {
       try {
-        const token = await tokenProvider();
-        const orgUrl = process.env.AZURE_DEVOPS_ORG_URL;
+        const connection = await connectionProvider();
+        const extensionApi = await connection.getExtensionManagementApi();
 
-        if (!orgUrl) {
-          return {
-            content: [{ type: "text", text: "AZURE_DEVOPS_ORG_URL environment variable is not set" }],
-            isError: true,
-          };
-        }
+        const scope = scopeType === "User" ? "User" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
 
-        const scope = scopeType === "User" ? `User/${scopeValue || "me"}` : "Default/Current";
-        const url = `${orgUrl}/_apis/ExtensionManagement/InstalledExtensions/${publisherName}/${extensionName}/Data/Scopes/${scope}/Collections/${encodeURIComponent(collectionName)}/Documents/${encodeURIComponent(documentId)}?api-version=7.1-preview.1`;
+        const document = await extensionApi.getDocumentByName(publisherName, extensionName, scope, scopeVal, collectionName, documentId);
 
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "User-Agent": userAgentProvider(),
-          },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          return {
-            content: [{ type: "text", text: `Error getting document: ${response.status} ${response.statusText}\n${errorText}` }],
-            isError: true,
-          };
-        }
-
-        const document = await response.json();
         return {
           content: [{ type: "text", text: JSON.stringify(document, null, 2) }],
         };
@@ -85,38 +63,14 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
     },
     async ({ publisherName, extensionName, collectionName, scopeType, scopeValue }) => {
       try {
-        const token = await tokenProvider();
-        const orgUrl = process.env.AZURE_DEVOPS_ORG_URL;
+        const connection = await connectionProvider();
+        const extensionApi = await connection.getExtensionManagementApi();
 
-        if (!orgUrl) {
-          return {
-            content: [{ type: "text", text: "AZURE_DEVOPS_ORG_URL environment variable is not set" }],
-            isError: true,
-          };
-        }
+        const scope = scopeType === "User" ? "User" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
 
-        const scope = scopeType === "User" ? `User/${scopeValue || "me"}` : "Default/Current";
-        const url = `${orgUrl}/_apis/ExtensionManagement/InstalledExtensions/${publisherName}/${extensionName}/Data/Scopes/${scope}/Collections/${encodeURIComponent(collectionName)}/Documents?api-version=7.1-preview.1`;
+        const documents = await extensionApi.getDocumentsByName(publisherName, extensionName, scope, scopeVal, collectionName);
 
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "User-Agent": userAgentProvider(),
-          },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          return {
-            content: [{ type: "text", text: `Error getting documents: ${response.status} ${response.statusText}\n${errorText}` }],
-            isError: true,
-          };
-        }
-
-        const result = await response.json();
-        const documents = result.value || result;
         return {
           content: [{ type: "text", text: JSON.stringify(documents, null, 2) }],
         };
@@ -143,38 +97,14 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
     },
     async ({ publisherName, extensionName, collectionName, document, scopeType, scopeValue }) => {
       try {
-        const token = await tokenProvider();
-        const orgUrl = process.env.AZURE_DEVOPS_ORG_URL;
+        const connection = await connectionProvider();
+        const extensionApi = await connection.getExtensionManagementApi();
 
-        if (!orgUrl) {
-          return {
-            content: [{ type: "text", text: "AZURE_DEVOPS_ORG_URL environment variable is not set" }],
-            isError: true,
-          };
-        }
+        const scope = scopeType === "User" ? "User" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
 
-        const scope = scopeType === "User" ? `User/${scopeValue || "me"}` : "Default/Current";
-        const url = `${orgUrl}/_apis/ExtensionManagement/InstalledExtensions/${publisherName}/${extensionName}/Data/Scopes/${scope}/Collections/${encodeURIComponent(collectionName)}/Documents?api-version=7.1-preview.1`;
+        const createdDocument = await extensionApi.createDocumentByName(document, publisherName, extensionName, scope, scopeVal, collectionName);
 
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "User-Agent": userAgentProvider(),
-          },
-          body: JSON.stringify(document),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          return {
-            content: [{ type: "text", text: `Error creating document: ${response.status} ${response.statusText}\n${errorText}` }],
-            isError: true,
-          };
-        }
-
-        const createdDocument = await response.json();
         return {
           content: [{ type: "text", text: JSON.stringify(createdDocument, null, 2) }],
         };
@@ -201,16 +131,6 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
     },
     async ({ publisherName, extensionName, collectionName, document, scopeType, scopeValue }) => {
       try {
-        const token = await tokenProvider();
-        const orgUrl = process.env.AZURE_DEVOPS_ORG_URL;
-
-        if (!orgUrl) {
-          return {
-            content: [{ type: "text", text: "AZURE_DEVOPS_ORG_URL environment variable is not set" }],
-            isError: true,
-          };
-        }
-
         if (!document.id) {
           return {
             content: [{ type: "text", text: "Document must include an 'id' property for set operation" }],
@@ -218,28 +138,14 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
           };
         }
 
-        const scope = scopeType === "User" ? `User/${scopeValue || "me"}` : "Default/Current";
-        const url = `${orgUrl}/_apis/ExtensionManagement/InstalledExtensions/${publisherName}/${extensionName}/Data/Scopes/${scope}/Collections/${encodeURIComponent(collectionName)}/Documents/${encodeURIComponent(document.id)}?api-version=7.1-preview.1`;
+        const connection = await connectionProvider();
+        const extensionApi = await connection.getExtensionManagementApi();
 
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "User-Agent": userAgentProvider(),
-          },
-          body: JSON.stringify(document),
-        });
+        const scope = scopeType === "User" ? "User" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          return {
-            content: [{ type: "text", text: `Error setting document: ${response.status} ${response.statusText}\n${errorText}` }],
-            isError: true,
-          };
-        }
+        const updatedDocument = await extensionApi.setDocumentByName(document, publisherName, extensionName, scope, scopeVal, collectionName);
 
-        const updatedDocument = await response.json();
         return {
           content: [{ type: "text", text: JSON.stringify(updatedDocument, null, 2) }],
         };
@@ -266,16 +172,6 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
     },
     async ({ publisherName, extensionName, collectionName, document, scopeType, scopeValue }) => {
       try {
-        const token = await tokenProvider();
-        const orgUrl = process.env.AZURE_DEVOPS_ORG_URL;
-
-        if (!orgUrl) {
-          return {
-            content: [{ type: "text", text: "AZURE_DEVOPS_ORG_URL environment variable is not set" }],
-            isError: true,
-          };
-        }
-
         if (!document.id) {
           return {
             content: [{ type: "text", text: "Document must include an 'id' property for update operation" }],
@@ -283,28 +179,14 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
           };
         }
 
-        const scope = scopeType === "User" ? `User/${scopeValue || "me"}` : "Default/Current";
-        const url = `${orgUrl}/_apis/ExtensionManagement/InstalledExtensions/${publisherName}/${extensionName}/Data/Scopes/${scope}/Collections/${encodeURIComponent(collectionName)}/Documents/${encodeURIComponent(document.id)}?api-version=7.1-preview.1`;
+        const connection = await connectionProvider();
+        const extensionApi = await connection.getExtensionManagementApi();
 
-        const response = await fetch(url, {
-          method: "PATCH",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "User-Agent": userAgentProvider(),
-          },
-          body: JSON.stringify(document),
-        });
+        const scope = scopeType === "User" ? "User" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          return {
-            content: [{ type: "text", text: `Error updating document: ${response.status} ${response.statusText}\n${errorText}` }],
-            isError: true,
-          };
-        }
+        const updatedDocument = await extensionApi.updateDocumentByName(document, publisherName, extensionName, scope, scopeVal, collectionName);
 
-        const updatedDocument = await response.json();
         return {
           content: [{ type: "text", text: JSON.stringify(updatedDocument, null, 2) }],
         };
@@ -331,34 +213,13 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
     },
     async ({ publisherName, extensionName, collectionName, documentId, scopeType, scopeValue }) => {
       try {
-        const token = await tokenProvider();
-        const orgUrl = process.env.AZURE_DEVOPS_ORG_URL;
+        const connection = await connectionProvider();
+        const extensionApi = await connection.getExtensionManagementApi();
 
-        if (!orgUrl) {
-          return {
-            content: [{ type: "text", text: "AZURE_DEVOPS_ORG_URL environment variable is not set" }],
-            isError: true,
-          };
-        }
+        const scope = scopeType === "User" ? "User" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
 
-        const scope = scopeType === "User" ? `User/${scopeValue || "me"}` : "Default/Current";
-        const url = `${orgUrl}/_apis/ExtensionManagement/InstalledExtensions/${publisherName}/${extensionName}/Data/Scopes/${scope}/Collections/${encodeURIComponent(collectionName)}/Documents/${encodeURIComponent(documentId)}?api-version=7.1-preview.1`;
-
-        const response = await fetch(url, {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "User-Agent": userAgentProvider(),
-          },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          return {
-            content: [{ type: "text", text: `Error deleting document: ${response.status} ${response.statusText}\n${errorText}` }],
-            isError: true,
-          };
-        }
+        await extensionApi.deleteDocumentByName(publisherName, extensionName, scope, scopeVal, collectionName, documentId);
 
         return {
           content: [{ type: "text", text: `Document '${documentId}' deleted successfully from collection '${collectionName}'` }],

@@ -16,7 +16,14 @@ import { configureWikiTools } from "./tools/wiki.js";
 import { configureWorkTools } from "./tools/work.js";
 import { configureWorkItemTools } from "./tools/work-items.js";
 
-function configureAllTools(server: McpServer, tokenProvider: () => Promise<string>, connectionProvider: () => Promise<WebApi>, userAgentProvider: () => string, enabledDomains: Set<string>) {
+function configureAllTools(
+  server: McpServer,
+  tokenProvider: () => Promise<string>,
+  connectionProvider: () => Promise<WebApi>,
+  userAgentProvider: () => string,
+  enabledDomains: Set<string>,
+  orgUrl: string
+) {
   const configureIfDomainEnabled = (domain: string, configureFn: () => void) => {
     if (enabledDomains.has(domain)) {
       configureFn();
@@ -24,7 +31,7 @@ function configureAllTools(server: McpServer, tokenProvider: () => Promise<strin
   };
 
   configureIfDomainEnabled(Domain.CORE, () => configureCoreTools(server, tokenProvider, connectionProvider, userAgentProvider));
-  configureIfDomainEnabled(Domain.EXTENSION_DATA, () => configureExtensionDataTools(server, tokenProvider, userAgentProvider));
+  configureIfDomainEnabled(Domain.EXTENSION_DATA, () => configureExtensionDataTools(server, tokenProvider, connectionProvider));
   configureIfDomainEnabled(Domain.WORK, () => configureWorkTools(server, tokenProvider, connectionProvider));
   configureIfDomainEnabled(Domain.PIPELINES, () => configurePipelineTools(server, tokenProvider, connectionProvider, userAgentProvider));
   configureIfDomainEnabled(Domain.REPOSITORIES, () => configureRepoTools(server, tokenProvider, connectionProvider, userAgentProvider));
