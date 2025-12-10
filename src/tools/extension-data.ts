@@ -34,7 +34,7 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
         const extensionApi = await connection.getExtensionManagementApi();
 
         const scope = scopeType === "User" ? "User" : "Default";
-        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : scopeValue || "Current";
 
         const document = await extensionApi.getDocumentByName(publisherName, extensionName, scope, scopeVal, collectionName, documentId);
 
@@ -67,7 +67,7 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
         const extensionApi = await connection.getExtensionManagementApi();
 
         const scope = scopeType === "User" ? "User" : "Default";
-        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : scopeValue || "Current";
 
         const documents = await extensionApi.getDocumentsByName(publisherName, extensionName, scope, scopeVal, collectionName);
 
@@ -101,7 +101,7 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
         const extensionApi = await connection.getExtensionManagementApi();
 
         const scope = scopeType === "User" ? "User" : "Default";
-        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : scopeValue || "Current";
 
         const createdDocument = await extensionApi.createDocumentByName(document, publisherName, extensionName, scope, scopeVal, collectionName);
 
@@ -142,7 +142,7 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
         const extensionApi = await connection.getExtensionManagementApi();
 
         const scope = scopeType === "User" ? "User" : "Default";
-        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : scopeValue || "Current";
 
         const updatedDocument = await extensionApi.setDocumentByName(document, publisherName, extensionName, scope, scopeVal, collectionName);
 
@@ -183,7 +183,7 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
         const extensionApi = await connection.getExtensionManagementApi();
 
         const scope = scopeType === "User" ? "User" : "Default";
-        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : scopeValue || "Current";
 
         const updatedDocument = await extensionApi.updateDocumentByName(document, publisherName, extensionName, scope, scopeVal, collectionName);
 
@@ -217,7 +217,7 @@ function configureExtensionDataTools(server: McpServer, tokenProvider: () => Pro
         const extensionApi = await connection.getExtensionManagementApi();
 
         const scope = scopeType === "User" ? "User" : "Default";
-        const scopeVal = scopeType === "User" ? scopeValue || "me" : "Default";
+        const scopeVal = scopeType === "User" ? scopeValue || "me" : scopeValue || "Current";
 
         await extensionApi.deleteDocumentByName(publisherName, extensionName, scope, scopeVal, collectionName, documentId);
 
