@@ -16,6 +16,8 @@ This guide offers step-by-step examples for using the Azure DevOps MCP Server to
 - [Adding Artifact Links](#adding-artifact-links)
 - [Reading, Creating, and Updating Wiki Page Content](#reading-creating-and-updating-wiki-page-content)
 
+> 📚 **Additional Examples**: For extension data storage examples, see [Extension Data Examples](./EXAMPLES-EXTENSION-DATA.md).
+
 ## 🙋‍♂️ Projects and Teams
 
 ### Get List of Projects

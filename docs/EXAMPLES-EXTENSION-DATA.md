@@ -12,8 +12,17 @@ The Extension Data tools provide access to Azure DevOps Extension Data Storage A
 
 ## Scope Types
 
-- **Default** (Project Collection): Data shared by all users in the organization
-- **User**: Data specific to individual users
+- **Default** (Project Collection): Data shared by all users in the organization. Uses scopeValue "Current" by default.
+- **User**: Data specific to individual users. Uses scopeValue "me" by default.. Uses scopeValue "me" by default.
+
+## Scope Value Parameter
+
+The `scopeValue` parameter is optional and has different defaults based on `scopeType`:
+
+- When `scopeType` is "Default" (or omitted): `scopeValue` defaults to "Current"
+- When `scopeType` is "User": `scopeValue` defaults to "me" (current user)
+
+You typically don't need to specify `scopeValue` unless you need non-default behavior.
 
 ## Examples
 
